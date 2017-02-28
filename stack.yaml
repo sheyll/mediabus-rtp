@@ -1,0 +1,14 @@
+resolver: lts-8.2
+
+packages:
+- '.'
+
+extra-deps:
+ - mediabus-0.2.0.2
+
+flags: {}
+
+extra-package-dbs: []
+
+build:
+  test: true
