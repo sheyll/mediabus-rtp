@@ -11,11 +11,7 @@ module Data.MediaBus.Rtp.Source
 import           Conduit
 import           Control.Lens
 import qualified Data.ByteString          as B
-import           Data.MediaBus.Audio.Alaw
-import           Data.MediaBus.Ticks
-import           Data.MediaBus.Sample
-import           Data.MediaBus.Stream
-import           Data.MediaBus.Series
+import           Data.MediaBus
 import           Data.MediaBus.Rtp.Packet
 import           Control.Monad
 import           Data.Default
@@ -100,7 +96,7 @@ rtpPayloadDemux payloadTable fallbackContent =
     mapC (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp)) .|
         awaitForever go
   where
-    setFallbackContent = payload .~ fallbackContent
+    setFallbackContent = framePayload .~ fallbackContent
     go (MkStream (Next !frm)) =
         let pt = frm ^. framePayload . rtpPayloadType
             mHandler = Data.List.lookup pt payloadTable
@@ -113,5 +109,5 @@ rtpPayloadDemux payloadTable fallbackContent =
 type RtpPayloadHandler t c = Frame RtpSeqNum t RtpPayload
     -> Frame RtpSeqNum t c
 
-alawPayloadHandler :: RtpPayloadHandler t (SampleBuffer ALaw)
-alawPayloadHandler = payload %~ (coerce . _rtpPayload)
+alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))
+alawPayloadHandler = framePayload %~ (view (from pcmMediaBuffer) . coerce . _rtpPayload)

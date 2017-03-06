@@ -2,9 +2,10 @@ resolver: lts-8.2
 
 packages:
 - '.'
+- '../mediabus'
 
 extra-deps:
- - mediabus-0.2.0.2
+ - mediabus-0.3.0.0
 
 flags: {}
 

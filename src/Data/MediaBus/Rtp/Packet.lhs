@@ -21,7 +21,7 @@ TODO: Add RTCP support
 > import Data.MediaBus.Monotone
 > import Data.MediaBus.Sequence
 > import Control.Lens
-> import Data.MediaBus.Sample
+> import Data.MediaBus.Media.Buffer
 > import GHC.Generics         ( Generic )
 > import Control.DeepSeq
 > import System.Random
@@ -72,8 +72,10 @@ The 'Ord' instance of the 'RtpTimestamp' should handle the wrap-around
 correctly, therefore we use the 'IsMonotonic' method 'succeeds'.
 
 > instance Ord RtpTimestamp where
->   (MkRtpTimestamp l) `compare` (MkRtpTimestamp r) =
->       if l == r then EQ else if l `succeeds` r then GT else LT
+>   (MkRtpTimestamp l) `compare` (MkRtpTimestamp r)
+>     | l == r = EQ
+>     | l `succeeds` r = GT
+>     | otherwise = LT
 
 SeqNum numbers are special because they wrap-around.
 
@@ -110,7 +112,7 @@ The payload contains the actual media data, i.e. the raw payload bytes together
 with the 'RtpPayloadType'.
 
 > data RtpPayload = MkRtpPayload { _rtpPayloadType :: RtpPayloadType
->                                , _rtpPayload     :: SampleBuffer Word8
+>                                , _rtpPayload     :: MediaBuffer Word8
 >                                }
 >    deriving (Eq, Generic)
 
@@ -145,7 +147,7 @@ And then adjust for padding:
 >   let bodyBytes = if hasPadding h
 >                   then adjustPadding remainingBytes
 >                   else remainingBytes
->       body = MkRtpPayload pt (sampleBufferFromByteString bodyBytes)
+>       body = MkRtpPayload pt (mediaBufferFromByteString bodyBytes)
 
 Wrap everything up and return it:
 
@@ -364,7 +366,7 @@ From https://www.ietf.org/rfc/rfc3550.txt, section 5:
       packet are listed, allowing correct talker indication at the
       receiver.
 
->   csrcs' <- sequence (replicate (fromIntegral csrcCount) getWord32be)
+>   csrcs' <- replicateM (fromIntegral csrcCount) getWord32be
 
 If a the extension flag is set, we must parse an optional header extension:
 
@@ -407,7 +409,7 @@ Quoting the RFC again:
 > getHeaderExtension = do
 >   field  <- getWord16be
 >   len    <- getWord16be
->   body   <- sequence (replicate (fromIntegral len) getWord32be)
+>   body   <- replicateM (fromIntegral len) getWord32be
 >   return (MkHeaderExtension field body)
 
 NOTE: To test this, you can use gstreamer, e.g. with this command line:
@@ -446,12 +448,12 @@ Serialization is straight forward the opposite of deserialization.
 First write the header then the body.
 
 >   putPayloadTypeAndHeader (_rtpPayloadType b) h
->   putByteString (byteStringFromSampleBuffer (_rtpPayload b))
+>   putByteString (mediaBufferToByteString (_rtpPayload b))
 
 Calculate number of bytes required for padding.
 
 >   let paddingLen = fromIntegral
->         ((64 - ((sampleCount (_rtpPayload b)) `rem` 64)) `rem` 64)
+>         ((64 - (mediaBufferLength (_rtpPayload b) `rem` 64)) `rem` 64)
 
 The 'Header' field 'hasPadding', which is an input to this function,
 is interpreted to indicate if padding is /allowed/.
@@ -523,7 +525,7 @@ The SSRC:
 
 The maximum of 16 csrcs:
 
->   mapM_ putWord32be (rtpSsrc <$> (take 16 csrcs))
+>   mapM_ putWord32be (rtpSsrc <$> take 16 csrcs)
 
 And last but not least the header extensions:
 

@@ -1,5 +1,5 @@
 name:                mediabus-rtp
-version:             0.2.0.0
+version:             0.3.0.0
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/lindenbaum/mediabus-rtp

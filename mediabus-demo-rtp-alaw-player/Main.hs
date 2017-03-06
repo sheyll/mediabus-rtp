@@ -33,9 +33,9 @@ mainASync = runResourceT $
                           (\(_, !src) -> runConduit (src .|
                                                          exitAfterC maxFrames .|
                                                          concealMissing blank .|
-                                                         streamDebugPlaybackSink))
+                                                         debugAudioPlaybackSink))
 
 mainSync :: IO ()
 mainSync = runConduitRes (rtpAlaw16kHzS16Source 10000 "127.0.01" 20 .|
                               exitAfterC maxFrames .|
-                              streamDebugPlaybackSink)
+                              debugAudioPlaybackSink)
