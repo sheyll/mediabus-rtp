@@ -1,5 +1,6 @@
 module Data.MediaBus.Rtp.AlawSource
   ( rtpAlaw16kHzS16Source
+  , alawPayloadHandler
   ) where
 
 import Conduit
@@ -11,6 +12,8 @@ import Data.Proxy
 import Data.Streaming.Network (HostPreference)
 import Data.Word
 import Network.Socket (SockAddr)
+import Control.Lens
+import Data.Coerce
 
 rtpAlaw16kHzS16Source
   :: MonadResource m
@@ -25,9 +28,15 @@ rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
   rtpSource .|
   rtpPayloadDemux [(8, alawPayloadHandler)] mempty .|
   annotateTypeCOut
-    (Proxy :: Proxy (Stream RtpSsrc RtpSeqNum (Ticks (Hz 8000) Word32)  () (Audio (Hz 8000) Mono (Raw S16))))
+    (Proxy :: Proxy (Stream RtpSsrc RtpSeqNum (Ticks (Hz 8000) Word32) () (Audio (Hz 8000) Mono (Raw S16))))
     alawToS16 .|
   resample8to16kHz' (0 :: Pcm Mono S16) .|
-  convertTicksC' (Proxy :: Proxy '(Hz 8000, Word32)) (Proxy :: Proxy '(Hz 16000, Word64))  .|
+  convertTicksC'
+    (Proxy :: Proxy '( Hz 8000, Word32))
+    (Proxy :: Proxy '( Hz 16000, Word64)) .|
   reorderFramesBySeqNumC reorderBufferSize .|
   segmentC
+
+alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))
+alawPayloadHandler =
+  framePayload %~ (view (from pcmMediaBuffer) . coerce . _rtpPayload)

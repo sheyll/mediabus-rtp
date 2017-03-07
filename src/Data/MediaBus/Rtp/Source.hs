@@ -5,7 +5,6 @@ module Data.MediaBus.Rtp.Source
     , rtpSource
     , rtpPayloadDemux
     , type RtpPayloadHandler
-    , alawPayloadHandler
     ) where
 
 import           Conduit
@@ -17,7 +16,6 @@ import           Control.Monad
 import           Data.Default
 import           Text.Printf
 import           Debug.Trace
-import           Data.Coerce
 import qualified Data.List
 import           Data.Maybe
 
@@ -108,6 +106,3 @@ rtpPayloadDemux payloadTable fallbackContent =
 
 type RtpPayloadHandler t c = Frame RtpSeqNum t RtpPayload
     -> Frame RtpSeqNum t c
-
-alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))
-alawPayloadHandler = framePayload %~ (view (from pcmMediaBuffer) . coerce . _rtpPayload)

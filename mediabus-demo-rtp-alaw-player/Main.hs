@@ -1,7 +1,6 @@
 module Main where
 
 import           System.Environment
-import           Data.MediaBus.AsyncConduit
 import           Conduit
 import           Data.MediaBus
 import           Data.MediaBus.Rtp

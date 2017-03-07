@@ -136,7 +136,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
         let inputs = [ MkStream (Start (MkFrameCtx 0 0 0 ()))
                      , mkTestRtpPacket 0 0 0
                      ]
-            outs = preview payload <$> runTestConduit inputs [] ()
+            outs = preview eachFrameContent <$> runTestConduit inputs [] ()
         in
             outs `shouldBe` [ Nothing, Just () ]
     it "always yields the fallback element if the payload table contains no handler for the payload type" $
@@ -146,11 +146,11 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
                                              0
                                              (mkTestPayload (MkRtpPayloadType p))
                 | p <- [0 .. 128] ]
-            fallback :: SampleBuffer (S16 8000)
+            fallback :: Audio (Hz 8000) Mono (Raw S16)
             fallback = mempty
-            outs = preview payload <$> runTestConduit inputs
+            outs = preview eachFrameContent <$> runTestConduit inputs
                                                       [ ( MkRtpPayloadType 129
-                                                        , transcode .
+                                                        , over (framePayload . eachChannel) decodeALawSample .
                                                             alawPayloadHandler
                                                         )
                                                       ]
@@ -164,21 +164,21 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
                 [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
                 , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
                 ]
-            outputs = preview payload <$> runTestConduit inputs
+            outputs = preview eachFrameContent <$> runTestConduit inputs
                                                          [ ( 8
-                                                           , payload .~
+                                                           , framePayload .~
                                                                "first 8 handler"
                                                            )
                                                          , ( 8
-                                                           , payload .~
+                                                           , framePayload .~
                                                                "second 8 handler"
                                                            )
                                                          , ( 0
-                                                           , payload .~
+                                                           , framePayload .~
                                                                "first 0 handler"
                                                            )
                                                          , ( 0
-                                                           , payload .~
+                                                           , framePayload .~
                                                                "second 0 handler"
                                                            )
                                                          ]
@@ -191,7 +191,7 @@ mkBrokenTestRtpPacket :: Stream Int Int Int () B.ByteString
 mkBrokenTestRtpPacket = MkStream (Next (MkFrame 0 0 (B.pack [ 0, 0, 0 ])))
 
 mkTestPayload :: RtpPayloadType -> RtpPayload
-mkTestPayload pt = MkRtpPayload pt (sampleBufferFromList [ 0, 0, 0 ])
+mkTestPayload pt = MkRtpPayload pt (mediaBufferFromList [ 0, 0, 0 ])
 
 mkTestRtpPacket :: RtpSsrc
                 -> RtpSeqNum

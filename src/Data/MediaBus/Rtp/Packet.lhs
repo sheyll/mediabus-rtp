@@ -18,8 +18,8 @@ TODO: Add RTCP support
 > import Text.Printf
 > import Data.Word
 > import Data.Bits
-> import Data.MediaBus.Monotone
-> import Data.MediaBus.Sequence
+> import Data.MediaBus.Basics.Monotone
+> import Data.MediaBus.Basics.Sequence
 > import Control.Lens
 > import Data.MediaBus.Media.Buffer
 > import GHC.Generics         ( Generic )
