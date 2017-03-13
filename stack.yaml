@@ -1,9 +1,10 @@
-resolver: nightly
+resolver: lts-8.2
 
 packages:
 - '.'
 
-extra-deps: []
+extra-deps:
+ - mediabus-0.3.2.0
 
 flags: {}
 
