@@ -1,5 +1,5 @@
 name:                mediabus-rtp
-version:             0.3.0.0
+version:             0.3.2.0
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/lindenbaum/mediabus-rtp
@@ -76,6 +76,7 @@ library
                      , lifted-async
                      , mediabus
                      , monad-control
+                     , monad-logger
                      , mtl
                      , network
                      , parallel
@@ -115,6 +116,7 @@ test-suite tests
                      , hspec
                      , lens
                      , monad-control
+                     , monad-logger
                      , mtl
                      , singletons
                      , spool == 0.1
@@ -193,6 +195,7 @@ executable mediabus-demo-rtp-alaw-player
                      , lens
                      , lifted-async
                      , monad-control
+                     , monad-logger
                      , mtl
                      , parallel
                      , random

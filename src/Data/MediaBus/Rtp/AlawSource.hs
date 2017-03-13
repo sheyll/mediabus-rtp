@@ -1,3 +1,4 @@
+-- | A high-level RTP receiver for G.711-ALAW.
 module Data.MediaBus.Rtp.AlawSource
   ( rtpAlaw16kHzS16Source
   , alawPayloadHandler
@@ -14,9 +15,11 @@ import Data.Word
 import Network.Socket (SockAddr)
 import Control.Lens
 import Data.Coerce
+import Control.Monad.Logger
 
+-- | Opend a UDP port and listen for RTP- G711 Alaw packets
 rtpAlaw16kHzS16Source
-  :: MonadResource m
+  :: (MonadLogger m, MonadResource m)
   => Int
   -> HostPreference
   -> Int
@@ -37,6 +40,7 @@ rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
   reorderFramesBySeqNumC reorderBufferSize .|
   segmentC
 
+-- | Coerce an 'RtpPayload' to an 'ALaw' buffer.
 alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))
 alawPayloadHandler =
   framePayload %~ (view (from pcmMediaBuffer) . coerce . _rtpPayload)

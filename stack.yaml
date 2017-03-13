@@ -4,7 +4,7 @@ packages:
 - '.'
 
 extra-deps:
- - mediabus-0.3.0.0
+ - mediabus-0.3.2.0
 
 flags: {}
 

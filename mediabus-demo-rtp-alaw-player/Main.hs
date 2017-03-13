@@ -3,6 +3,7 @@ module Main where
 import           System.Environment
 import           Conduit
 import           Data.MediaBus
+import           Control.Monad.Logger
 import           Data.MediaBus.Rtp
 
 {- Send test data with:
@@ -26,7 +27,7 @@ main = do
         (_ : _) -> mainSync
 
 mainASync :: IO ()
-mainASync = runResourceT $
+mainASync = runStdoutLoggingT $ runResourceT $
     withAsyncPolledSource 20
                           (rtpAlaw16kHzS16Source 10000 "127.0.01" 5)
                           (\(_, !src) -> runConduit (src .|
@@ -35,6 +36,6 @@ mainASync = runResourceT $
                                                          debugAudioPlaybackSink))
 
 mainSync :: IO ()
-mainSync = runConduitRes (rtpAlaw16kHzS16Source 10000 "127.0.01" 20 .|
-                              exitAfterC maxFrames .|
-                              debugAudioPlaybackSink)
+mainSync = runStdoutLoggingT $ runConduitRes (rtpAlaw16kHzS16Source 10000 "127.0.01" 20 .|
+                                              exitAfterC maxFrames .|
+                                              debugAudioPlaybackSink)

@@ -9,6 +9,7 @@ import qualified Data.ByteString   as B
 import           Data.Word
 import           Control.Lens
 import           Data.Proxy
+import           Control.Monad.Logger
 
 spec :: Spec
 spec = rtpSourceSpec >> rtpPayloadDemuxSpec
@@ -20,7 +21,8 @@ rtpSourceSpec = describe "rtpSource" $ do
                                  Start _ -> n + 1
                                  Next _ -> n)
                             0
-        runTestConduit inputs = runConduitPure (sourceList inputs .|
+        runTestConduit inputs = runNoLogging $ runConduit
+                                                (sourceList inputs .|
                                                     annotateTypeCIn (Proxy :: Proxy (Stream Int Int Int () B.ByteString))
                                                                     rtpSource .|
                                                     consume)
@@ -124,10 +126,15 @@ rtpSourceSpec = describe "rtpSource" $ do
             length (runTestConduit inputs) `shouldBe`
                 8
 
+runNoLogging :: NoLoggingT Identity a -> a
+runNoLogging = runIdentity . runNoLoggingT
+
 rtpPayloadDemuxSpec :: Spec
 rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
     let runTestConduit inputs payloadHandlers fallback =
-            runConduitPure (sourceList inputs .|
+            runNoLogging $
+                runConduit
+                    (sourceList inputs .|
                                 rtpSource .|
                                 rtpPayloadDemux payloadHandlers fallback .|
                                 consume)
