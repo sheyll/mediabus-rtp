@@ -41,7 +41,6 @@ rtpSource
      , Default i
      , Monad m
      , Default p
-     , Show p
      , MonadLogger m
      )
   => Conduit (Stream i s t p B.ByteString) m (RtpStream p)
@@ -137,5 +136,5 @@ rtpPayloadDemux payloadTable fallbackContent =
 
 -- | Functions from 'Frame' to 'Frame' for converting/coercing an 'RtpPayload'
 -- to some common media type. NOTE: This is not for transcoding, this is rather
--- for /casting/ or /coercing/ 
+-- for /casting/ or /coercing/
 type RtpPayloadHandler t c = Frame RtpSeqNum t RtpPayload -> Frame RtpSeqNum t c

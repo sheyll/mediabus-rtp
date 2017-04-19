@@ -1,14 +1,15 @@
-resolver: lts-8.2
+resolver: lts-8.6
 
 packages:
 - '.'
+  # - '../mediabus'
 
 extra-deps:
- - mediabus-0.3.2.0
+ - mediabus-0.4.0.0
 
 flags: {}
 
 extra-package-dbs: []
 
-build:
-  test: true
+install-ghc: true
+pvp-bounds: upper
