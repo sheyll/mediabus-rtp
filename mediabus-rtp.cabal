@@ -2,7 +2,7 @@ name:                mediabus-rtp
 version:             0.4.0.0
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
-homepage:            https://github.com/lindenbaum/mediabus-rtp
+homepage:            https://github.com/sheyll/mediabus-rtp
 license:             BSD3
 license-file:        LICENSE
 author:              Sven Heyll
