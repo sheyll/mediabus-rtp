@@ -8,6 +8,7 @@
 .stack-work/
 TAGS
 /.idea/
+*.iml
 /.dir-locals.el
 *.refactored.hs
 .vscode/
