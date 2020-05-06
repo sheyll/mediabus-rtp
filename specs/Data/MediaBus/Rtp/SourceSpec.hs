@@ -143,7 +143,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
         let inputs = [ MkStream (Start (MkFrameCtx 0 0 0 ()))
                      , mkTestRtpPacket 0 0 0
                      ]
-            outs = preview eachFrameContent <$> runTestConduit inputs [] ()
+            outs = preview eachFramePayload <$> runTestConduit inputs [] ()
         in
             outs `shouldBe` [ Nothing, Just () ]
     it "always yields the fallback element if the payload table contains no handler for the payload type" $
@@ -155,7 +155,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
                 | p <- [0 .. 128] ]
             fallback :: Audio (Hz 8000) Mono (Raw S16)
             fallback = mempty
-            outs = preview eachFrameContent <$> runTestConduit inputs
+            outs = preview eachFramePayload <$> runTestConduit inputs
                                                       [ ( MkRtpPayloadType 129
                                                         , over (framePayload . eachChannel) decodeALawSample .
                                                             alawPayloadHandler
@@ -171,7 +171,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
                 [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
                 , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
                 ]
-            outputs = preview eachFrameContent <$> runTestConduit inputs
+            outputs = preview eachFramePayload <$> runTestConduit inputs
                                                          [ ( 8
                                                            , framePayload .~
                                                                "first 8 handler"
