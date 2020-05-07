@@ -49,7 +49,7 @@ rtpSource =
   awaitForever processFrames
   where
     processFrames frm@(MkStream (Start _)) =
-      $logInfo (fromString ("state frame received: " ++ show frm))
+      $logInfo (fromString ("start frame received: " ++ show frm))
     processFrames (MkStream (Next (MkFrame _ _ !contentIn))) =
       case deserialize contentIn of
         Left rtpError -> logRtpError rtpError

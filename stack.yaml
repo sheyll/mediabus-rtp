@@ -5,7 +5,7 @@ packages:
 - '../mediabus'
 
 extra-deps:
- - mediabus-0.5.0.0
+ # - mediabus-0.5.0.0
 
 flags: {}
 

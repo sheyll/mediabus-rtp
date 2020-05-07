@@ -84,7 +84,6 @@ library
                      , process
                      , random
                      , resourcet
-                     , spool == 0.1
                      , stm
                      , streaming-commons
                      , tagged
