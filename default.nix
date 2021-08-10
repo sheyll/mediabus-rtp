@@ -6,7 +6,7 @@ let this =
     {
       src = haskell-nix.cleanSourceHaskell {
         src = ./.;
-        name = "mediabus";
+        name = "mediabus-rtp";
       };
       projectFileName = "cabal.project";
       compiler-nix-name = "ghc8105";
@@ -19,6 +19,14 @@ let this =
             packages.mediabus-rtp.components.tests.tests.build-tools = [
               this.hsPkgs.hspec-discover
             ];
+            packages.mediabus.components.tests.tests.build-tools = [
+              this.hsPkgs.hspec-discover
+            ];
+            packages.mediabus-rtp.allComponent = {
+              enableExecutableProfiling = withProfiling;
+              enableLibraryProfiling = withProfiling;
+            };
+
             # END OF HACK
           }
         ]
@@ -27,7 +35,6 @@ let this =
           [
             {
               packages.mediabus-rtp.package.ghcOptions = "-fprof-auto";
-              packages.mediabus-rtp.components.library.enableLibraryProfiling = true;
             }
           ] else [{ }]);
     };
