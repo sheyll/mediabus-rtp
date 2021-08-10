@@ -18,6 +18,7 @@
 src/**/*.c
 /dist/
 /dist-new/
+/dist-newstyle/
 .vscode/
 /cabal.config
 *.aux
@@ -28,10 +29,10 @@ src/**/*.c
 cabal.project.local
 .ghc.environment.*
 .hsenv
-result
+result*
+src/**/*.c
 *.aux
 *.hp
 *.prof
 *.ps
 *.pdf
-/mediabus-demo-rtp-alaw-player-profile-output-*
