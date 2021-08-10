@@ -23,7 +23,7 @@ rtpAlaw16kHzS16Source
   => Int
   -> HostPreference
   -> Int
-  -> Source m (Stream RtpSsrc RtpSeqNum (Ticks (Hz 16000) Word64) () (Segment (640 :/ Hz 16000) (Audio (Hz 16000) Mono (Raw S16))))
+  -> ConduitT () (Stream RtpSsrc RtpSeqNum (Ticks (Hz 16000) Word64) () (Segment (640 :/ Hz 16000) (Audio (Hz 16000) Mono (Raw S16)))) m ()
 rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
   annotateTypeSource
     (Proxy :: Proxy (Stream (SourceId (Maybe SockAddr)) RtpSeqNum (ClockTimeDiff UtcClock) () B.ByteString))

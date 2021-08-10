@@ -1,6 +1,5 @@
-#!/usr/bin/zsh
+#!/usr/bin/env bash
 
 set -e
 
-
-stack build --no-test --no-library-profiling --no-executable-profiling --no-haddock
+nix-build -A mediabus-rtp.components.exes.mediabus-demo-rtp-alaw-player

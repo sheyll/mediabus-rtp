@@ -43,7 +43,7 @@ rtpSource
      , Default p
      , MonadLogger m
      )
-  => Conduit (Stream i s t p B.ByteString) m (RtpStream p)
+  => ConduitT (Stream i s t p B.ByteString) (RtpStream p) m ()
 rtpSource =
   evalStateC (MkRRState (MkFrameCtx def def def def) True) $
   awaitForever processFrames
@@ -118,20 +118,20 @@ data RRSourceChange
 -- | A utility that call the right 'RtpPayloadHandler' for the 'RtpPayloadType'
 -- of the 'Frame'.
 rtpPayloadDemux
-  :: (Integral t, Monad m)
+  :: (Integral t, Monad m, MonadIO m)
   => [(RtpPayloadType, RtpPayloadHandler (Ticks r t) c)]
   -> c
-  -> Conduit (RtpStream p) m (Stream RtpSsrc RtpSeqNum (Ticks r t) p c)
+  -> ConduitT (RtpStream p) (Stream RtpSsrc RtpSeqNum (Ticks r t) p c) m ()
 rtpPayloadDemux payloadTable fallbackContent =
   mapC (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp)) .|
   awaitForever go
   where
     setFallbackContent = framePayload .~ fallbackContent
-    go (MkStream (Next !frm)) =
+    go (MkStream (Next !frm)) = do
       let pt = frm ^. framePayload . rtpPayloadType
           mHandler = Data.List.lookup pt payloadTable
           !frm' = fromMaybe setFallbackContent mHandler frm
-      in yieldNextFrame frm'
+      yieldNextFrame frm'
     go (MkStream (Start !frmCtx)) = yieldStartFrameCtx frmCtx
 
 -- | Functions from 'Frame' to 'Frame' for converting/coercing an 'RtpPayload'

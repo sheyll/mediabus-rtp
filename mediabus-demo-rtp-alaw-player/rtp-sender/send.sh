@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 PORT=${1?port missing}
 MY_IP=${2?host ip missing}
 FNAME=${3:-28797-04.ogg}
-FILE=$(realpath $(dirname ${0})/$FNAME)
+FILE=$(realpath $FNAME)
 
 gst-launch-1.0  uridecodebin uri=file://$FILE ! \
                 queue ! \
