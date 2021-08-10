@@ -1,17 +1,17 @@
+cabal-version:       2.4
 name:                mediabus-rtp
 version:             0.5.0.1
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/sheyll/mediabus-rtp
-license:             BSD3
+license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Sven Heyll
 maintainer:          sven.heyll@lindenbaum.eu
-copyright:           2016-2020 Sven Heyll, Lindenbaum GmbH
+copyright:           2016-2021 Sven Heyll, Lindenbaum GmbH
 category:            Audio
 build-type:          Simple
 -- extra-source-files:
-cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
@@ -63,7 +63,7 @@ library
   build-depends:       QuickCheck
                      , array
                      , async
-                     , base >= 4.11 && < 5
+                     , base >= 4.12 && < 5
                      , bytestring
                      , cereal
                      , conduit
@@ -74,7 +74,7 @@ library
                      , deepseq
                      , lens
                      , lifted-async
-                     , mediabus >= 0.5
+                     , mediabus >= 0.5.0.1
                      , monad-control
                      , monad-logger
                      , mtl
@@ -98,10 +98,16 @@ test-suite tests
   main-is:             Spec.hs
   other-modules:       Data.MediaBus.Rtp.SourceSpec
   default-language:    Haskell2010
+
+  -- HACK make cabal test work in nix-shell
+  -- https://github.com/obsidiansystems/cardano-node/commit/1d500566fe628f9e603244b55c2c524965bd66ff
+  -- build-tool-depends:  hspec-discover:hspec-discover
+  -- END OF HACK
+
   build-depends:       QuickCheck
                      , array
                      , async
-                     , base >= 4.11 && < 5
+                     , base >= 4.12 && < 5
                      , binary
                      , bytestring
                      , bytestring-to-vector
@@ -127,7 +133,6 @@ test-suite tests
                      , transformers
                      , type-spec
                      , vector <13
-  default-language:    Haskell2010
   default-extensions:  ApplicativeDo
                      , Arrows
                      , BangPatterns
@@ -199,7 +204,6 @@ executable mediabus-demo-rtp-alaw-player
                      , streaming-commons
                      , time
                      , vector <13
-  default-language:    Haskell2010
   default-extensions:  ApplicativeDo
                      , Arrows
                      , BangPatterns
@@ -245,6 +249,8 @@ executable mediabus-demo-rtp-alaw-player
                      -fno-warn-unused-do-bind
                      -fno-warn-missing-signatures
                      -fno-warn-type-defaults
+                     -rtsopts
+                     -threaded
 
 source-repository head
   type:     git
