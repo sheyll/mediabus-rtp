@@ -23,6 +23,7 @@ let
               packages.mediabus.components.tests.tests.build-tools = [
                 this.hsPkgs.hspec-discover
               ];
+              # END OF HACK
               packages.mediabus-rtp.allComponent = {
                 enableExecutableProfiling = withProfiling;
                 enableLibraryProfiling = withProfiling;
@@ -33,7 +34,6 @@ let
                   }
                 else {}
               );
-              # END OF HACK
             }
           ];
       };

@@ -2,6 +2,6 @@
 
 set -e
 
-$HERE=$(realpath $(dirname "$0"))
+HERE=$(realpath $(dirname "$0"))
 
 $HERE/mk-demo.sh --arg withProfiling true
