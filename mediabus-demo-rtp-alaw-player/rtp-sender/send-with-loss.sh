@@ -1,10 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+HERE=$(realpath $(dirname "$0"))
 
 PORT=${1?port missing}
 MY_IP=${2?host ip missing}
 DROPPROP=${3?Drop probability missing}
-FNAME=${4:-28797-04.ogg}
-FILE=$(realpath $(dirname ${0})/$FNAME)
+FNAME=${4:-${HERE}/28797-04.ogg}
+FILE=$(realpath $FNAME)
 
 gst-launch-1.0  uridecodebin uri=file://$FILE ! \
                 queue ! \
