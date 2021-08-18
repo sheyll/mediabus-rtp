@@ -63,7 +63,7 @@ library
   build-depends:       QuickCheck
                      , array
                      , async
-                     , base >= 4.12 && < 5
+                     , base ^>= 4.14
                      , bytestring
                      , cereal
                      , conduit
@@ -74,7 +74,7 @@ library
                      , deepseq
                      , lens
                      , lifted-async
-                     , mediabus >= 0.5.0.1
+                     , mediabus ^>= 0.5.0.1
                      , monad-control
                      , monad-logger
                      , mtl
@@ -107,7 +107,7 @@ test-suite tests
   build-depends:       QuickCheck
                      , array
                      , async
-                     , base >= 4.12 && < 5
+                     , base ^>= 4.14
                      , binary
                      , bytestring
                      , bytestring-to-vector
@@ -185,7 +185,7 @@ executable mediabus-demo-rtp-alaw-player
   default-language:    Haskell2010
   build-depends:       QuickCheck
                      , async
-                     , base >= 4.11 && < 5
+                     , base ^>= 4.14
                      , conduit
                      , conduit-combinators
                      , conduit-extra
