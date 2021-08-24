@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                mediabus-rtp
-version:             0.5.0.1
+version:             0.6.0
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/sheyll/mediabus-rtp
@@ -74,7 +74,7 @@ library
                      , deepseq
                      , lens
                      , lifted-async
-                     , mediabus ^>= 0.5.0.1
+                     , mediabus ^>= 0.8
                      , monad-control
                      , monad-logger
                      , mtl
