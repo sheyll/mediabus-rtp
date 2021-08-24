@@ -1,5 +1,9 @@
 # Changes
 
+## 0.6.1
+
+* Remove unused dependencies
+
 ## 0.6.0
 
 * Update to mediabus-0.8.0

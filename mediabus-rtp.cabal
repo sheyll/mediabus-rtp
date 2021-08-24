@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                mediabus-rtp
-version:             0.6.0
+version:             0.6.1
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/sheyll/mediabus-rtp
@@ -73,9 +73,7 @@ library
                      , data-default
                      , deepseq
                      , lens
-                     , lifted-async
                      , mediabus ^>= 0.8
-                     , monad-control
                      , monad-logger
                      , mtl
                      , network
@@ -83,7 +81,6 @@ library
                      , primitive
                      , process
                      , random
-                     , resourcet
                      , stm
                      , streaming-commons
                      , tagged
@@ -104,35 +101,13 @@ test-suite tests
   -- build-tool-depends:  hspec-discover:hspec-discover
   -- END OF HACK
 
-  build-depends:       QuickCheck
-                     , array
-                     , async
-                     , base ^>= 4.14
-                     , binary
-                     , bytestring
-                     , bytestring-to-vector
+  build-depends:       base ^>= 4.14
                      , conduit
                      , conduit-combinators
                      , conduit-extra
                      , mediabus
                      , mediabus-rtp
-                     , containers
-                     , data-default
-                     , deepseq
-                     , hspec
-                     , lens
-                     , monad-control
                      , monad-logger
-                     , mtl
-                     , singletons
-                     , stm
-                     , tagged
-                     , template-haskell
-                     , text
-                     , time
-                     , transformers
-                     , type-spec
-                     , vector <13
   default-extensions:  ApplicativeDo
                      , Arrows
                      , BangPatterns
@@ -193,8 +168,6 @@ executable mediabus-demo-rtp-alaw-player
                      , mediabus-rtp
                      , data-default
                      , lens
-                     , lifted-async
-                     , monad-control
                      , monad-logger
                      , mtl
                      , parallel
@@ -203,6 +176,7 @@ executable mediabus-demo-rtp-alaw-player
                      , tagged
                      , streaming-commons
                      , time
+                     , unliftio
                      , vector <13
   default-extensions:  ApplicativeDo
                      , Arrows
