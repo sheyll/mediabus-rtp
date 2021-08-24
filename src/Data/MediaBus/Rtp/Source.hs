@@ -118,7 +118,7 @@ data RRSourceChange
 -- | A utility that call the right 'RtpPayloadHandler' for the 'RtpPayloadType'
 -- of the 'Frame'.
 rtpPayloadDemux
-  :: (Integral t, Monad m, MonadIO m)
+  :: (Integral t, Monad m)
   => [(RtpPayloadType, RtpPayloadHandler (Ticks r t) c)]
   -> c
   -> ConduitT (RtpStream p) (Stream RtpSsrc RtpSeqNum (Ticks r t) p c) m ()
