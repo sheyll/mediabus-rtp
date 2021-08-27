@@ -1,10 +1,17 @@
 { pkgs ? (import ./nix/pkgs.nix) }:
 let
-  this = pkgs.callPackage ./default.nix { };
+  this = pkgs.callPackage ./default.nix {};
 in
 this.shellFor {
   packages = ps: [ ps.mediabus-rtp ];
-  buildInputs = with pkgs.gst_all_1; [ gstreamer gst-plugins-base gst-plugins-good pkgs.sox ];
+  buildInputs = with pkgs.gst_all_1;
+    [
+      gstreamer
+      gst-plugins-base
+      gst-plugins-good
+      gst-plugins-bad
+      pkgs.sox
+    ];
 
   # HACK
   # make hspec-discover available

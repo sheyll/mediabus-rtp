@@ -15,12 +15,12 @@ let
         modules =
           [
             {
+              packages.mediabus.components.tests.tests.build-tools = [
               # HACK make 'cabal test' work
               # https://github.com/input-output-hk/haskell.nix/issues/231#issuecomment-731699727
-              packages.mediabus.components.tests.tests.build-tools = [
                 this.hsPkgs.hspec-discover
-              ];
               # END OF HACK
+              ];
               packages.mediabus-rtp.components.library = {
                 enableExecutableProfiling = withProfiling;
                 enableLibraryProfiling = withProfiling;
