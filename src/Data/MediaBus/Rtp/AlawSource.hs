@@ -27,9 +27,7 @@ rtpAlaw16kHzS16Source
         ()
         (Stream
           RtpSsrc RtpSeqNum (Ticks (Hz 16000) Word64)
-          ()
-          (StaticSegment (320 :/ Hz 16000)
-            (Audio (Hz 16000) Mono (Raw S16)))) m ()
+          () (Audio (Hz 16000) Mono (Raw S16))) m ()
 rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
   annotateTypeSource
     (Proxy :: Proxy (Stream (SourceId (Maybe SockAddr)) RtpSeqNum (ClockTimeDiff UtcClock) () B.ByteString))
@@ -43,8 +41,7 @@ rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
   convertTimestampC
     (Proxy :: Proxy '( Hz 8000, Word32))
     (Proxy :: Proxy '( Hz 16000, Word64)) .|
-  reorderFramesBySeqNumC reorderBufferSize .|
-  staticSegmentC
+  reorderFramesBySeqNumC reorderBufferSize
 
 -- | Coerce an 'RtpPayload' to an 'ALaw' buffer.
 alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))

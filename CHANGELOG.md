@@ -1,5 +1,10 @@
 # Changes
 
+## 0.7.0
+
+* Remove the static segmentation from `rtpAlaw16kHzS16Source`
+  so the caller can decide the segmentation.
+
 ## 0.6.2
 
 * Update to mediabus-0.9.0

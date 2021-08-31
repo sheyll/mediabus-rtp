@@ -3,16 +3,9 @@ module Main where
 import Conduit (runConduit, runConduitRes, runResourceT, (.|))
 import Control.Monad.Logger (runStdoutLoggingT)
 import Data.MediaBus
-  ( Hz,
-    assumeSynchronizedC,
-    concealMissing,
-    debugAudioPlaybackSink,
-    exitAfterC,
-    setSequenceNumberAndTimestampC,
-    withConcurrentSource,
-  )
 import Data.MediaBus.Conduit.Async (withAsyncPolledSource)
 import Data.MediaBus.Rtp (RtpSeqNum, rtpAlaw16kHzS16Source)
+import Data.Proxy
 import System.Environment (getArgs, getProgName)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 import Numeric.Natural
@@ -48,7 +41,9 @@ mainASyncTB n =
     runResourceT $
       withAsyncPolledSource
         n
-        (rtpAlaw16kHzS16Source 10000 "127.0.0.1" 5)
+        (rtpAlaw16kHzS16Source 10000 "127.0.0.1" 5
+        .| staticSegmentC' (Proxy @(320 :/ Hz 16000))
+        )
         ( \(_, !src) ->
             runConduit
               ( src
@@ -64,7 +59,10 @@ mainASyncFR n =
     runResourceT $
       withConcurrentSource
         n
-        (rtpAlaw16kHzS16Source 10000 "127.0.0.1" 5 .| assumeSynchronizedC)
+        (rtpAlaw16kHzS16Source 10000 "127.0.0.1" 5
+          .| staticSegmentC' (Proxy @(400 :/ Hz 16000))
+          .| assumeSynchronizedC
+          )
         ( \(_, !src) ->
             runConduit
               ( src
