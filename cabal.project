@@ -6,5 +6,4 @@ optional-packages:
 source-repository-package
   type: git
   location: https://github.com/sheyll/mediabus.git
-  tag: 0.9.0
-  --sha256: 1jz6qws73dg2xlsqr6a1dg55dw7gmwpkk2wy36n30flggsf5fisz
+  tag: 1.0.0

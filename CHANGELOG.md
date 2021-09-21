@@ -1,5 +1,10 @@
 # Changes
 
+## 1.0.0
+
+* Update logging to always set a `LogSource` for this library
+* Change the examples to include some segmentation.
+
 ## 0.7.0
 
 * Remove the static segmentation from `rtpAlaw16kHzS16Source`
