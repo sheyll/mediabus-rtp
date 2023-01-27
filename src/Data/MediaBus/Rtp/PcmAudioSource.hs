@@ -14,6 +14,9 @@ import Data.MediaBus.Rtp.Packet
 import Data.MediaBus.Rtp.Source
 import Data.Streaming.Network (HostPreference)
 import Data.Word
+import System.ByteOrder (fromBigEndian)
+import qualified Data.Vector.Storable.Mutable as MV
+import Data.Foldable (traverse_)
 
 -- | Opend a UDP port and listen for PCM Signed 16bit 16kHz packets with the RTP payload type
 udpRtpPcmAudioSource16kHzS16SourceC ::
@@ -46,5 +49,8 @@ pcmLittleEndianSigned16Bit16kHzRtpPayloadDecoderC =
 -- | Coerce an 'RtpPayload' to a signed, little-endian 16 Bit buffer.
 coerceToPcmL16Payload :: RtpPayloadHandler RtpTimestamp (Audio (Hz 16000) Mono (Raw S16))
 coerceToPcmL16Payload =
-  framePayload %~ (view (from rawPcmAudioBuffer) . mediaBufferFromByteString . _rtpPayload)
-
+  framePayload %~ (view (from rawPcmAudioBuffer) .  swapByteOrder . mediaBufferFromByteString . _rtpPayload)
+  where
+    swapByteOrder :: MediaBuffer (Pcm Mono S16) -> MediaBuffer (Pcm Mono S16)
+    swapByteOrder = modifyMediaBuffer $ \v ->
+       traverse_ (MV.modify v (over (eachChannel' . s16Sample) fromBigEndian)) [0 .. MV.length v - 1]

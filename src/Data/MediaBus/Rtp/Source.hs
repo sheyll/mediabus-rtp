@@ -20,7 +20,6 @@ import Control.Monad.Logger
 import qualified Data.ByteString as B
 import Data.Default
 import qualified Data.List
-import Data.Maybe
 import Data.MediaBus
 import Data.MediaBus.Rtp.InternalLogging
 import Data.MediaBus.Rtp.Packet
