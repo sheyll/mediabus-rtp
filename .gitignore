@@ -28,3 +28,5 @@
 /cabal.project.local
 /result*
 /src/**/*.c
+/.direnv
+/result*

@@ -2,4 +2,4 @@
 
 set -e
 
-nix-build -A mediabus-rtp.components.exes.mediabus-demo-rtp-alaw-player $@
+nix build .\#mediabus-rtp:exe:mediabus-rtp-demo $@

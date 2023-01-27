@@ -10,12 +10,14 @@ import Data.MediaBus.Rtp
 import Data.Proxy
 import Data.Word
 import Test.Hspec
+import Control.Concurrent (newMVar, putMVar, takeMVar)
+import Control.Monad.Trans.State.Strict
 
 spec :: Spec
-spec = rtpSourceSpec >> rtpPayloadDemuxSpec
+spec = rtpParserCSpec >> rtpPayloadDemuxSpec >> rtpPayloadDispatcherSpec
 
-rtpSourceSpec :: Spec
-rtpSourceSpec = describe "rtpSource" $ do
+rtpParserCSpec :: Spec
+rtpParserCSpec = describe "rtpParserC" $ do
   let countStarts :: [Series a b] -> Int
       countStarts =
         foldr
@@ -30,7 +32,7 @@ rtpSourceSpec = describe "rtpSource" $ do
             ( sourceList inputs
                 .| annotateTypeCIn
                   (Proxy :: Proxy (Stream Int Int Int () B.ByteString))
-                  rtpSource
+                  rtpParserC
                 .| consume
             )
 
@@ -141,7 +143,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
         runNoLogging $
           runConduit
             ( sourceList inputs
-                .| rtpSource
+                .| rtpParserC
                 .| rtpPayloadDemux payloadHandlers fallback
                 .| consume
             )
@@ -171,7 +173,7 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
               inputs
               [ ( MkRtpPayloadType 129,
                   over (framePayload . eachChannel) decodeALawSample
-                    . alawPayloadHandler
+                    . coerceToAlawPayload
                 )
               ]
               fallback
@@ -214,7 +216,7 @@ mkBrokenTestRtpPacket :: Stream Int Int Int () B.ByteString
 mkBrokenTestRtpPacket = MkStream (Next (MkFrame 0 0 (B.pack [0, 0, 0])))
 
 mkTestPayload :: RtpPayloadType -> RtpPayload
-mkTestPayload pt = MkRtpPayload pt (mediaBufferFromList [0, 0, 0])
+mkTestPayload pt = rtpPayloadFromList pt [0, 0, 0]
 
 mkTestRtpPacket ::
   RtpSsrc ->
@@ -253,3 +255,74 @@ mkTestRtpPacketWithPayload ssrc sn ts p =
             )
         )
     )
+
+rtpPayloadDispatcherSpec :: Spec
+rtpPayloadDispatcherSpec = describe "rtpPayloadDispatcher" $ do
+  let runTestConduit
+        :: [Stream Int Int Int () B.ByteString]
+        -> [(RtpPayloadType,
+              RtpPayloadConsumer
+                  ()
+                  (Ticks r Int)
+                  (Int, Int, Int)
+                  (StateT Int (NoLoggingT IO)))]
+        -> IO [Stream RtpSsrc RtpSeqNum (Ticks r Int) () (Int, Int, Int)]
+      runTestConduit inputs payloadHandlers =
+        runNoLoggingT $
+          runConduit $
+          evalStateC (0::Int)
+            ( sourceList inputs
+                .| rtpParserC
+                .| rtpPayloadDispatcher payloadHandlers
+                .| consume
+            )
+  it "passes through the packets to the handlers" $
+    let
+        handler :: Int -> IO (RtpPayloadConsumer
+                  ()
+                  (Ticks r t)
+                  (Int, Int, Int)
+                  (Control.Monad.Trans.State.Strict.StateT Int (NoLoggingT IO)))
+        handler start = do
+          myRef <- liftIO $ newMVar (0::Int)
+          return $ awaitForever $ \case
+                      (MkStream (Start _)) ->
+                        return ()
+                      (MkStream (Next !frm)) -> do
+                        lift $ modify (+1)
+                        c <- lift get
+                        m <- liftIO $ takeMVar myRef
+                        liftIO $ putMVar myRef (m+1)
+                        yieldNextFrame (frm & framePayload .~ (start, c, m))
+
+        inputs =
+          MkStream (Start (MkFrameCtx 0 0 0 ())) :
+          [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
+            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
+            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0),
+            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
+            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
+            ]
+        outputs :: IO [Maybe (Int, Int, Int)]
+        outputs = do
+          h1 <- handler 8000
+          h2 <- handler 1000
+          out <- runTestConduit
+              inputs
+              [ ( 8, h1 ),
+                ( 0, h2 )
+              ]
+          return (preview eachFramePayload <$> out)
+
+     in outputs
+          `shouldReturn`
+          [
+          Nothing,
+          Just (8000, 1,0),
+          Just (8000, 2, 1),
+          Just (1000, 3,0),
+          Just (8000, 4,2),
+          Just (1000, 5,1)
+          ]
+
+

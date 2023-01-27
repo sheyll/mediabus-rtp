@@ -5,20 +5,28 @@
 
 ## Overview
 
-Currently this module provides support for reception of RTP packets.
+Currently this module provides support for reception of RTP Audio packets with a focus on low-fi audio codecs.
 
-## RTP-Alaw Demo
+## RTP-Audio Demo
 
-Make sure you have **sox** and **gstreamer >= 1.0** installed.
+Either use `nix develop` **or** make sure you have **sox** and **gstreamer >= 1.0** installed.
 
-Check out this project and in shell execute these commands:
+Run an RTP sender:
 
-    cd mediabus-demo-rtp-alaw-player/rtp-sender
-    ./send.sh 10000 127.0.0.1
+    cd mediabus-rtp-demo/rtp-sender
+    ./send-pcm16.sh 10000 127.0.0.1
 
-This starts the RTP sender, that sends the demo/test content.
+This sends the demo/test content.
 
 Now start the demo-receiver in a second shell:
 
-    ./build-mediabus-demo-rtp-alaw-player.sh
-    stack exec mediabus-demo-rtp-alaw-player
+    nix run .#mediabus-rtp-demo -- sync
+
+or
+
+    ./mk-demo.sh
+    ./result/bin/mediabus-rtp-demo sync
+
+or
+    nix develop
+    cabal run -- sync

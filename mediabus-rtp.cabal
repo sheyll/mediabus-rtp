@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                mediabus-rtp
-version:             1.0.0
+version:             2.0.0
 synopsis:            Receive and Send RTP Packets
 description:         Please see README.md
 homepage:            https://github.com/sheyll/mediabus-rtp
@@ -8,7 +8,7 @@ license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Sven Heyll
 maintainer:          sven.heyll@lindenbaum.eu
-copyright:           2016-2021 Sven Heyll, Lindenbaum GmbH
+copyright:           2016-2023 Sven Heyll, Lindenbaum GmbH
 category:            Audio
 build-type:          Simple
 -- extra-source-files:
@@ -20,6 +20,7 @@ library
                      , Data.MediaBus.Rtp.Packet
                      , Data.MediaBus.Rtp.Source
                      , Data.MediaBus.Rtp.AlawSource
+                     , Data.MediaBus.Rtp.PcmAudioSource
   default-language:    Haskell2010
   ghc-options:       -Wall -funbox-strict-fields -fno-warn-unused-do-bind  -fprint-explicit-kinds
   default-extensions:  ApplicativeDo
@@ -64,7 +65,7 @@ library
   build-depends:       QuickCheck
                      , array
                      , async
-                     , base ^>= 4.14
+                     , base >= 4.14 && < 5
                      , bytestring
                      , cereal
                      , conduit
@@ -74,7 +75,7 @@ library
                      , data-default
                      , deepseq
                      , lens
-                     , mediabus ^>= 1.0
+                     , mediabus ^>= 1.0.1
                      , monad-logger
                      , mtl
                      , network
@@ -102,7 +103,7 @@ test-suite tests
   -- build-tool-depends:  hspec-discover:hspec-discover
   -- END OF HACK
 
-  build-depends:       base ^>= 4.14
+  build-depends:       base >= 4.14 && < 5
                      , conduit
                      , conduit-combinators
                      , conduit-extra
@@ -112,6 +113,8 @@ test-suite tests
                      , lens
                      , hspec
                      , bytestring
+                     , mtl
+                     , transformers
   default-extensions:  ApplicativeDo
                      , Arrows
                      , BangPatterns
@@ -158,13 +161,13 @@ test-suite tests
                      -fno-warn-missing-signatures
                      -fno-warn-type-defaults
 
-executable mediabus-demo-rtp-alaw-player
-  hs-source-dirs:      mediabus-demo-rtp-alaw-player
+executable mediabus-rtp-demo
+  hs-source-dirs:      mediabus-rtp-demo
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       QuickCheck
                      , async
-                     , base ^>= 4.14
+                     , base >= 4.14 && < 5
                      , conduit
                      , conduit-combinators
                      , conduit-extra
@@ -232,4 +235,4 @@ executable mediabus-demo-rtp-alaw-player
 
 source-repository head
   type:     git
-  location: https://github.com/lindenbaum/mediabus-rtp
+  location: https://github.com/sheyll/mediabus-rtp

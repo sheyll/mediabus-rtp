@@ -1,5 +1,11 @@
 # Changes
 
+## 2.0.0
+
+* Introduce `Data.MediaBus.Rtp.PcmAudioSource` for directly receiving PCM 16 bit 16 kHz audio
+* Introduce `rtpPayloadDispatcher` and `rtpParserC`
+* Rename a lot of stuff
+
 ## 1.0.0
 
 * Update logging to always set a `LogSource` for this library
@@ -7,7 +13,7 @@
 
 ## 0.7.0
 
-* Remove the static segmentation from `rtpAlaw16kHzS16Source`
+* Remove the static segmentation from `udpRtpAlaw16kHzS16SourceC`
   so the caller can decide the segmentation.
 
 ## 0.6.2

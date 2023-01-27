@@ -1,56 +1,53 @@
 -- | A high-level RTP receiver for G.711-ALAW.
-module Data.MediaBus.Rtp.AlawSource
-  ( rtpAlaw16kHzS16Source,
-    alawPayloadHandler,
-  )
+module Data.MediaBus.Rtp.AlawSource (
+  udpRtpAlaw16kHzS16SourceC,
+  coerceToAlawPayload,
+  decodeAndResampleALaw,
+)
 where
 
 import Conduit
 import Control.Lens
 import Control.Monad.Logger (MonadLogger)
-import qualified Data.ByteString as B
-import Data.Coerce
 import Data.MediaBus
 import Data.MediaBus.Rtp.Packet
 import Data.MediaBus.Rtp.Source
 import Data.Proxy
 import Data.Streaming.Network (HostPreference)
 import Data.Word
-import Network.Socket (SockAddr)
+
 
 -- | Opend a UDP port and listen for RTP- G711 Alaw packets
-rtpAlaw16kHzS16Source ::
+udpRtpAlaw16kHzS16SourceC ::
   (MonadLogger m, MonadResource m) =>
   Int ->
   HostPreference ->
   Int ->
   ConduitT
     ()
-    ( Stream
-        RtpSsrc
-        RtpSeqNum
-        (Ticks (Hz 16000) Word64)
-        ()
-        (Audio (Hz 16000) Mono (Raw S16))
-    )
+    (Stream RtpSsrc RtpSeqNum (Ticks (Hz 16000) Word64) () (Audio (Hz 16000) Mono (Raw S16)))
     m
     ()
-rtpAlaw16kHzS16Source !udpListenPort !udpListenIP !reorderBufferSize =
-  annotateTypeSource
-    (Proxy :: Proxy (Stream (SourceId (Maybe SockAddr)) RtpSeqNum (ClockTimeDiff UtcClock) () B.ByteString))
-    (udpDatagramSource useUtcClock udpListenPort udpListenIP)
-    .| rtpSource
-    .| rtpPayloadDemux [(8, alawPayloadHandler)] mempty
-    .| annotateTypeCOut
-      (Proxy :: Proxy (Stream RtpSsrc RtpSeqNum (Ticks (Hz 8000) Word32) () (Audio (Hz 8000) Mono (Raw S16))))
-      alawToS16
-    .| resample8to16kHz' (0 :: Pcm Mono S16)
-    .| convertTimestampC
-      (Proxy :: Proxy '(Hz 8000, Word32))
-      (Proxy :: Proxy '(Hz 16000, Word64))
+udpRtpAlaw16kHzS16SourceC !udpListenPort !udpListenIP !reorderBufferSize =
+       udpRtpSourceC udpListenPort udpListenIP
+    .| rtpPayloadDispatcher [(8, decodeAndResampleALaw)]
     .| reorderFramesBySeqNumC reorderBufferSize
 
+decodeAndResampleALaw ::
+  Monad m =>
+  ConduitT
+    (RtpStream ())
+    (Stream RtpSsrc RtpSeqNum (Ticks (Hz 16000) Word64) () (Audio (Hz 16000) Mono (Raw S16)))
+    m
+    ()
+decodeAndResampleALaw =
+     mapFramesC' coerceToAlawPayload
+  .| convertRtpTimestampC
+  .| annotateTypeCOut (Proxy :: Proxy (Stream RtpSsrc RtpSeqNum (Ticks (Hz 8000) Word32) () (Audio (Hz 8000) Mono (Raw S16)))) alawToS16
+  .| resample8to16kHz' (0 :: Pcm Mono S16)
+  .| convertTimestampC (Proxy :: Proxy '(Hz 8000, Word32)) (Proxy :: Proxy '(Hz 16000, Word64))
+
 -- | Coerce an 'RtpPayload' to an 'ALaw' buffer.
-alawPayloadHandler :: RtpPayloadHandler t (Audio (Hz 8000) Mono (Raw ALaw))
-alawPayloadHandler =
-  framePayload %~ (view (from rawPcmAudioBuffer) . coerce . _rtpPayload)
+coerceToAlawPayload :: RtpPayloadHandler RtpTimestamp (Audio (Hz 8000) Mono (Raw ALaw))
+coerceToAlawPayload =
+  framePayload %~ (view (from rawPcmAudioBuffer) . mediaBufferFromByteString . _rtpPayload)

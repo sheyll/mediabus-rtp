@@ -2,7 +2,7 @@ Serialize and deserialize RTP packets.
 TODO: Add RTCP support
 
 > module Data.MediaBus.Rtp.Packet
->   ( RtpPacket(..), RtpHeader(..), HeaderExtension(..)
+>   ( RtpPacket(..), rtpPayloadFromList, RtpHeader(..), HeaderExtension(..)
 >   , type RtpSeqNum, RtpSsrc(..), RtpTimestamp(..)
 >   , RtpPayloadType(..), rtpPayloadTypeValue
 >   , RtpPayload(..), rtpPayloadType, rtpPayload
@@ -21,7 +21,6 @@ TODO: Add RTCP support
 > import Data.MediaBus.Basics.Monotone
 > import Data.MediaBus.Basics.Sequence
 > import Control.Lens
-> import Data.MediaBus.Media.Buffer
 > import GHC.Generics         ( Generic )
 > import Control.DeepSeq
 > import System.Random
@@ -112,7 +111,7 @@ The payload contains the actual media data, i.e. the raw payload bytes together
 with the 'RtpPayloadType'.
 
 > data RtpPayload = MkRtpPayload { _rtpPayloadType :: RtpPayloadType
->                                , _rtpPayload     :: MediaBuffer Word8
+>                                , _rtpPayload     :: B.ByteString -- MediaBuffer Word8
 >                                }
 >    deriving (Eq, Generic)
 
@@ -120,6 +119,14 @@ with the 'RtpPayloadType'.
 
 > makeLenses ''RtpPayloadType
 > makeLenses ''RtpPayload
+
+A utility to generate an 'RtpPayload' from a list of 'Word8', e.g.
+testing purposes.
+
+> rtpPayloadFromList :: RtpPayloadType -> [Word8] -> RtpPayload
+> rtpPayloadFromList pt p = MkRtpPayload { _rtpPayloadType = pt
+>                                        , _rtpPayload = B.pack p
+>                                        }
 
 Deserialize a complete RTP datagram:
 
@@ -147,7 +154,7 @@ And then adjust for padding:
 >   let bodyBytes = if hasPadding h
 >                   then adjustPadding remainingBytes
 >                   else remainingBytes
->       body = MkRtpPayload pt (mediaBufferFromByteString bodyBytes)
+>       body = MkRtpPayload pt bodyBytes
 
 Wrap everything up and return it:
 
@@ -448,12 +455,12 @@ Serialization is straight forward the opposite of deserialization.
 First write the header then the body.
 
 >   putPayloadTypeAndHeader (_rtpPayloadType b) h
->   putByteString (mediaBufferToByteString (_rtpPayload b))
+>   putByteString (_rtpPayload b)
 
 Calculate number of bytes required for padding.
 
 >   let paddingLen = fromIntegral
->         ((64 - (mediaBufferLength (_rtpPayload b) `rem` 64)) `rem` 64)
+>         ((64 - (B.length (_rtpPayload b) `rem` 64)) `rem` 64)
 
 The 'Header' field 'hasPadding', which is an input to this function,
 is interpreted to indicate if padding is /allowed/.
