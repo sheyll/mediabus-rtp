@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.2
+
+* Relax byte-order version
+
 ## 2.0.1
 
 * Update to mediabus-2.0.1
