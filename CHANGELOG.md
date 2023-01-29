@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.1
+
+* Update to mediabus-2.0.1
+
 ## 2.0.0
 
 * Introduce `Data.MediaBus.Rtp.PcmAudioSource` for directly receiving PCM 16 bit 16 kHz audio
