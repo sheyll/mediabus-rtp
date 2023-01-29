@@ -32,7 +32,7 @@ import Data.Word ( Word64 )
 import Data.MediaBus.Rtp.Source
     ( rtpPayloadDispatcher, udpRtpSourceC )
 import Data.MediaBus.Rtp.AlawSource
-    ( udpRtpAlaw16kHzS16SourceC, decodeAndResampleALaw )
+    ( udpRtpAlaw16kHzS16SourceC, decodeAndResampleALaw, withAlawDecoderState )
 import Data.MediaBus.Rtp.PcmAudioSource
     ( udpRtpPcmAudioSource16kHzS16SourceC, pcmLittleEndianSigned16Bit16kHzRtpPayloadDecoderC )
 
@@ -91,10 +91,10 @@ pcm16Receiver :: EnterpriseM m => ReceiverC m
 pcm16Receiver = udpRtpPcmAudioSource16kHzS16SourceC listenPort listenHost reorderBufferSize pcm16PayloadType
 
 g711AndPcm16Receiver :: Receiver
-g711AndPcm16Receiver =
+g711AndPcm16Receiver = withAlawDecoderState $ \st ->
        udpRtpSourceC listenPort listenHost
     .| rtpPayloadDispatcher [
-          (8,   reorderFramesBySeqNumC reorderBufferSize .| decodeAndResampleALaw),
+          (8,   reorderFramesBySeqNumC reorderBufferSize .| decodeAndResampleALaw st),
           (100, reorderFramesBySeqNumC reorderBufferSize .| pcmLittleEndianSigned16Bit16kHzRtpPayloadDecoderC)
           ]
 

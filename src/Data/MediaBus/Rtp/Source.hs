@@ -146,10 +146,15 @@ data RRSourceChange
   | FrameCtxNotChanged
   deriving (Eq, Show)
 
+-- | A conduit that creates 'Ticks' from an 'RtpTimestamp'
 convertRtpTimestampC ::
   (Monad m, Num t) => ConduitT (Stream a b RtpTimestamp c d) (Stream a b (Ticks r t) c d) m ()
 convertRtpTimestampC =
   mapC (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp))
+
+-- | A conduit that creates 'Ticks' from an 'RtpTimestamp'
+convertRtpTimestamp :: Num t => Stream a b RtpTimestamp c d -> Stream a b (Ticks r t) c d
+convertRtpTimestamp = timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp)
 
 {- | A utility that call the right 'RtpPayloadHandler' for the 'RtpPayloadType'
 of the 'Frame'.

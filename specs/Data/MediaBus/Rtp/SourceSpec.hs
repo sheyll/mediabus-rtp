@@ -1,6 +1,7 @@
 module Data.MediaBus.Rtp.SourceSpec (spec) where
 
 import Conduit
+import Control.Concurrent (newMVar, putMVar, takeMVar)
 import Control.Lens
 import Control.Monad.Logger
 import qualified Data.ByteString as B
@@ -10,8 +11,6 @@ import Data.MediaBus.Rtp
 import Data.Proxy
 import Data.Word
 import Test.Hspec
-import Control.Concurrent (newMVar, putMVar, takeMVar)
-import Control.Monad.Trans.State.Strict
 
 spec :: Spec
 spec = rtpParserCSpec >> rtpPayloadDemuxSpec >> rtpPayloadDispatcherSpec
@@ -43,22 +42,22 @@ rtpParserCSpec = describe "rtpParserC" $ do
 
   it "yields 'Start' when the first packet arrives" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 0 0
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 0 0
           ]
      in countStarts (_stream <$> runTestConduit inputs)
           `shouldBe` 1
 
   it "yields 'Start' when the ssrc changes" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 8 9 10 ())),
-            mkTestRtpPacket ssrc0 0 0,
-            mkTestRtpPacket ssrc0 0 0,
-            mkTestRtpPacket ssrc1 0 0,
-            mkTestRtpPacket ssrc1 0 0,
-            mkTestRtpPacket ssrc0 0 0,
-            mkTestRtpPacket ssrc1 0 0,
-            mkTestRtpPacket ssrc1 0 0
+          [ MkStream (Start (MkFrameCtx 8 9 10 ()))
+          , mkTestRtpPacket ssrc0 0 0
+          , mkTestRtpPacket ssrc0 0 0
+          , mkTestRtpPacket ssrc1 0 0
+          , mkTestRtpPacket ssrc1 0 0
+          , mkTestRtpPacket ssrc0 0 0
+          , mkTestRtpPacket ssrc1 0 0
+          , mkTestRtpPacket ssrc1 0 0
           ]
         ssrc0 = 123
         ssrc1 = 345
@@ -67,69 +66,69 @@ rtpParserCSpec = describe "rtpParserC" $ do
 
   it "yields 'Start' when the sequence numbers change too much" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 01 0,
-            mkTestRtpPacket 0 02 0,
-            mkTestRtpPacket 0 03 0,
-            mkTestRtpPacket 0 24 0,
-            mkTestRtpPacket 0 25 0,
-            mkTestRtpPacket 0 06 0,
-            mkTestRtpPacket 0 07 0
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 01 0
+          , mkTestRtpPacket 0 02 0
+          , mkTestRtpPacket 0 03 0
+          , mkTestRtpPacket 0 24 0
+          , mkTestRtpPacket 0 25 0
+          , mkTestRtpPacket 0 06 0
+          , mkTestRtpPacket 0 07 0
           ]
      in countStarts (_stream <$> runTestConduit inputs)
           `shouldBe` 3
 
   it "yields 'Start' when the sequence numbers change too much" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 01 0,
-            mkTestRtpPacket 0 02 0,
-            mkTestRtpPacket 0 03 0,
-            mkTestRtpPacket 0 24 0,
-            mkTestRtpPacket 0 25 0,
-            mkTestRtpPacket 0 06 0,
-            mkTestRtpPacket 0 07 0
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 01 0
+          , mkTestRtpPacket 0 02 0
+          , mkTestRtpPacket 0 03 0
+          , mkTestRtpPacket 0 24 0
+          , mkTestRtpPacket 0 25 0
+          , mkTestRtpPacket 0 06 0
+          , mkTestRtpPacket 0 07 0
           ]
      in countStarts (_stream <$> runTestConduit inputs)
           `shouldBe` 3
 
   it "yields no 'Start' when the sequence number wraps around" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 (negate 3) 0,
-            mkTestRtpPacket 0 (negate 2) 0,
-            mkTestRtpPacket 0 (negate 1) 0,
-            mkTestRtpPacket 0 0 0,
-            mkTestRtpPacket 0 1 0
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 (negate 3) 0
+          , mkTestRtpPacket 0 (negate 2) 0
+          , mkTestRtpPacket 0 (negate 1) 0
+          , mkTestRtpPacket 0 0 0
+          , mkTestRtpPacket 0 1 0
           ]
      in countStarts (_stream <$> runTestConduit inputs)
           `shouldBe` 1
 
   it "yields no 'Start' when the timestamp wraps around" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 0 (negate 300),
-            mkTestRtpPacket 0 0 (negate 200),
-            mkTestRtpPacket 0 0 (negate 100),
-            mkTestRtpPacket 0 0 0,
-            mkTestRtpPacket 0 0 100
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 0 (negate 300)
+          , mkTestRtpPacket 0 0 (negate 200)
+          , mkTestRtpPacket 0 0 (negate 100)
+          , mkTestRtpPacket 0 0 0
+          , mkTestRtpPacket 0 0 100
           ]
      in countStarts (_stream <$> runTestConduit inputs)
           `shouldBe` 1
 
   it "can handle broken packets without crashing" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 0 777,
-            mkTestRtpPacket 0 0 777,
-            mkBrokenTestRtpPacket,
-            mkBrokenTestRtpPacket,
-            mkTestRtpPacket 0 0 777,
-            mkTestRtpPacket 0 0 777,
-            mkBrokenTestRtpPacket,
-            mkTestRtpPacket 0 0 777,
-            mkTestRtpPacket 0 0 777,
-            mkTestRtpPacket 0 0 777
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 0 777
+          , mkTestRtpPacket 0 0 777
+          , mkBrokenTestRtpPacket
+          , mkBrokenTestRtpPacket
+          , mkTestRtpPacket 0 0 777
+          , mkTestRtpPacket 0 0 777
+          , mkBrokenTestRtpPacket
+          , mkTestRtpPacket 0 0 777
+          , mkTestRtpPacket 0 0 777
+          , mkTestRtpPacket 0 0 777
           ]
      in length (runTestConduit inputs)
           `shouldBe` 8
@@ -150,62 +149,67 @@ rtpPayloadDemuxSpec = describe "rtpPayloadDemux" $ do
 
   it "always yields the fallback element if the payload table contains no handler" $
     let inputs =
-          [ MkStream (Start (MkFrameCtx 0 0 0 ())),
-            mkTestRtpPacket 0 0 0
+          [ MkStream (Start (MkFrameCtx 0 0 0 ()))
+          , mkTestRtpPacket 0 0 0
           ]
         outs = preview eachFramePayload <$> runTestConduit inputs [] ()
      in outs `shouldBe` [Nothing, Just ()]
   it "always yields the fallback element if the payload table contains no handler for the payload type" $
     let inputs =
-          MkStream (Start (MkFrameCtx 0 0 0 ())) :
-            [ mkTestRtpPacketWithPayload
+          MkStream (Start (MkFrameCtx 0 0 0 ()))
+            : [ mkTestRtpPacketWithPayload
                 0
                 0
                 0
                 (mkTestPayload (MkRtpPayloadType p))
               | p <- [0 .. 128]
-            ]
+              ]
         fallback :: Audio (Hz 8000) Mono (Raw S16)
         fallback = mempty
         outs =
           preview eachFramePayload
             <$> runTestConduit
               inputs
-              [ ( MkRtpPayloadType 129,
-                  over (framePayload . eachChannel) decodeALawSample
-                    . coerceToAlawPayload
+              [
+                ( MkRtpPayloadType 129
+                , (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp)) . over (framePayload . eachChannel) decodeALawSample . coerceToAlawPayload
                 )
               ]
               fallback
-     in outs `shouldBe` Nothing :
-          [ Just fallback
-            | _ <- [0 .. 128 :: Word8]
-          ]
+     in outs
+          `shouldBe` Nothing
+            : [ Just fallback
+              | _ <- [0 .. 128 :: Word8]
+              ]
   it "invokes the first matching payload handler" $
     let inputs =
-          MkStream (Start (MkFrameCtx 0 0 0 ())) :
-          [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
-            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
-          ]
+          MkStream (Start (MkFrameCtx 0 0 0 ()))
+            : [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
+              , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
+              ]
         outputs =
           preview eachFramePayload
             <$> runTestConduit
               inputs
-              [ ( 8,
-                  framePayload
-                    .~ "first 8 handler"
-                ),
-                ( 8,
-                  framePayload
-                    .~ "second 8 handler"
-                ),
-                ( 0,
-                  framePayload
-                    .~ "first 0 handler"
-                ),
-                ( 0,
-                  framePayload
-                    .~ "second 0 handler"
+              [
+                ( 8
+                , (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp))
+                    . (framePayload .~ "first 8 handler")
+                )
+              ,
+                ( 8
+                , (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp))
+                    . (framePayload .~ "second 8 handler")
+                )
+              ,
+                ( 0
+                , (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp))
+                    . (framePayload .~ "first 0 handler")
+                )
+              ,
+                ( 0
+                , (timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp))
+                    . (framePayload .~ "second 0 handler")
                 )
               ]
               "bad"
@@ -258,19 +262,20 @@ mkTestRtpPacketWithPayload ssrc sn ts p =
 
 rtpPayloadDispatcherSpec :: Spec
 rtpPayloadDispatcherSpec = describe "rtpPayloadDispatcher" $ do
-  let runTestConduit
-        :: [Stream Int Int Int () B.ByteString]
-        -> [(RtpPayloadType,
-              RtpPayloadConsumer
-                  ()
-                  (Ticks r Int)
-                  (Int, Int, Int)
-                  (StateT Int (NoLoggingT IO)))]
-        -> IO [Stream RtpSsrc RtpSeqNum (Ticks r Int) () (Int, Int, Int)]
+  let runTestConduit ::
+        [Stream Int Int Int () B.ByteString] ->
+        [ ( RtpPayloadType
+          , RtpPayloadConsumer
+              ()
+              (Ticks r Int)
+              x
+              (NoLoggingT IO)
+          )
+        ] ->
+        IO [Stream RtpSsrc RtpSeqNum (Ticks r Int) () x]
       runTestConduit inputs payloadHandlers =
         runNoLoggingT $
-          runConduit $
-          evalStateC (0::Int)
+          runConduit
             ( sourceList inputs
                 .| rtpParserC
                 .| rtpPayloadDispatcher payloadHandlers
@@ -278,51 +283,57 @@ rtpPayloadDispatcherSpec = describe "rtpPayloadDispatcher" $ do
             )
   it "passes through the packets to the handlers" $
     let
-        handler :: Int -> IO (RtpPayloadConsumer
-                  ()
-                  (Ticks r t)
-                  (Int, Int, Int)
-                  (Control.Monad.Trans.State.Strict.StateT Int (NoLoggingT IO)))
-        handler start = do
-          myRef <- liftIO $ newMVar (0::Int)
-          return $ awaitForever $ \case
-                      (MkStream (Start _)) ->
-                        return ()
-                      (MkStream (Next !frm)) -> do
-                        lift $ modify (+1)
-                        c <- lift get
-                        m <- liftIO $ takeMVar myRef
-                        liftIO $ putMVar myRef (m+1)
-                        yieldNextFrame (frm & framePayload .~ (start, c, m))
+      handler ::
+        Num t =>
+        Int ->
+        IO
+          ( RtpPayloadConsumer
+              ()
+              (Ticks r t)
+              (Int, Int)
+              (NoLoggingT IO)
+          )
+      handler start = do
+        myRef <- liftIO $ newMVar (0 :: Int)
+        return $
+            awaitForever $
+              \case
+                (MkStream (Start _)) ->
+                  return ()
+                (MkStream (Next !frm)) -> do
+                  m <- liftIO (takeMVar myRef)
+                  liftIO (putMVar myRef (m + 1))
+                  yieldNextFrame
+                    ( frm
+                        & timestamp %~ (MkTicks . fromIntegral . _rtpTimestamp)
+                        & framePayload .~ (start, m)
+                    )
 
-        inputs =
-          MkStream (Start (MkFrameCtx 0 0 0 ())) :
-          [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
-            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
-            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0),
-            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8),
-            mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
+      inputs =
+        MkStream (Start (MkFrameCtx 0 0 0 ()))
+          : [ mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
+            , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
+            , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
+            , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 8)
+            , mkTestRtpPacketWithPayload 0 0 0 (mkTestPayload 0)
             ]
-        outputs :: IO [Maybe (Int, Int, Int)]
-        outputs = do
-          h1 <- handler 8000
-          h2 <- handler 1000
-          out <- runTestConduit
-              inputs
-              [ ( 8, h1 ),
-                ( 0, h2 )
-              ]
-          return (preview eachFramePayload <$> out)
-
-     in outputs
-          `shouldReturn`
-          [
-          Nothing,
-          Just (8000, 1,0),
-          Just (8000, 2, 1),
-          Just (1000, 3,0),
-          Just (8000, 4,2),
-          Just (1000, 5,1)
-          ]
-
-
+      outputs :: IO [Maybe (Int, Int)]
+      outputs = do
+        h1 <- handler 8000
+        h2 <- handler 1000
+        out <-
+          runTestConduit
+            inputs
+            [ (8, h1)
+            , (0, h2)
+            ]
+        return (preview eachFramePayload <$> out)
+     in
+      outputs
+        `shouldReturn` [ Nothing
+                       , Just (8000, 0)
+                       , Just (8000, 1)
+                       , Just (1000, 0)
+                       , Just (8000, 2)
+                       , Just (1000, 1)
+                       ]
